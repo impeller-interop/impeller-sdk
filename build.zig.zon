@@ -1,0 +1,17 @@
+.{
+    .name = .impeller_sdk,
+    .version = "0.0.1",
+    .fingerprint = 0xbb826b179954984d,
+    .minimum_zig_version = "0.16.0",
+    .dependencies = .{
+        // BEGIN GENERATED IMPELLER SDK DEPS
+        // END GENERATED IMPELLER SDK DEPS
+    },
+    .paths = .{
+        "build.zig",
+        "build.zig.zon",
+        "zig",
+        "README.md",
+        "LICENSE",
+    },
+}

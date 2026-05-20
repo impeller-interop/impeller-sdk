@@ -1,0 +1,10 @@
+.zig-cache/
+zig-cache/
+zig-out/
+zig-pkg/
+
+dist/
+tools/impeller_*/
+
+__pycache__/
+*.pyc

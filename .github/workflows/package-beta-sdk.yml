@@ -1,0 +1,93 @@
+name: Package Beta Impeller SDK
+
+on:
+  # Run automatically every 24 hours at 01:00 UTC, leaving Flutter artifacts
+  # about one hour to finish publishing.
+  schedule:
+    - cron: "0 1 * * *"
+
+  # Allow manual trigger.
+  workflow_dispatch:
+    inputs:
+      engine_sha:
+        description: Optional Flutter engine SHA
+        required: false
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: beta
+
+      - uses: mlugg/setup-zig@v2
+        with:
+          version: 0.16.0
+
+      - name: Package SDK assets
+        id: package
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          args=(
+            --channel beta
+            --out dist
+            --sdk sdk
+            --zon build.zig.zon
+            --skip-release
+          )
+
+          if [[ -n "${{ inputs.engine_sha || '' }}" ]]; then
+            args+=(--sha "${{ inputs.engine_sha }}")
+          fi
+
+          python3 tools/package_sdk.py "${args[@]}"
+
+      - name: Check for SDK changes
+        if: ${{ steps.package.outputs.skipped != 'true' }}
+        id: changes
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          git add build.zig.zon sdk
+          if git diff --cached --quiet; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "No SDK changes."
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            echo "SDK changed."
+          fi
+
+      - name: Commit SDK changes
+        if: ${{ steps.package.outputs.skipped != 'true' && steps.changes.outputs.changed == 'true' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "chore(sdk): update beta SDK"
+          git push origin HEAD:beta
+
+      - name: Publish SDK assets
+        if: ${{ steps.package.outputs.skipped != 'true' && steps.changes.outputs.changed == 'true' }}
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.package.outputs.release_tag }}
+          target_commitish: beta
+          files: |
+            dist/*.tar.gz
+            dist/lazy-deps.zigzon
+            dist/sdk-metadata.json
+          body: |
+            Generated beta Impeller SDK packages for engine `${{ steps.package.outputs.engine_sha }}`.
+
+            The `sdk/` directory in `beta` contains the combined SDK tree.
+            `lazy-deps.zigzon` contains the dependency entries generated for `build.zig.zon`.
