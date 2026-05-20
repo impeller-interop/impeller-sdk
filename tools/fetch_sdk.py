@@ -5,6 +5,8 @@ from __future__ import annotations
 
 import argparse
 import json
+import shutil
+import subprocess
 import sys
 import tempfile
 import urllib.error
@@ -28,6 +30,7 @@ DEFAULT_RELEASES_URL = (
 DEFAULT_FLUTTER_REPO_RAW_URL = "https://raw.githubusercontent.com/flutter/flutter"
 DEFAULT_CHANNEL = "stable"
 RELEASE_CHANNELS = ("stable", "beta")
+MACOS_DYLIB_ID = "@rpath/libimpeller.dylib"
 PLATFORM_DIRS = {
     "darwin-arm64": ("macos", "arm64"),
     "darwin-x64": ("macos", "x64"),
@@ -130,6 +133,31 @@ def copy_file(src: Path, dst: Path, force: bool) -> bool:
     return True
 
 
+def install_name_tool() -> str:
+    """Finds a Mach-O install-name editor. Raises if none is available."""
+    for name in (
+        "llvm-install-name-tool",
+        "llvm-install-name-tool-20",
+        "llvm-install-name-tool-19",
+        "llvm-install-name-tool-18",
+        "llvm-install-name-tool-17",
+        "llvm-install-name-tool-16",
+        "install_name_tool",
+    ):
+        path = shutil.which(name)
+        if path:
+            return path
+    raise RuntimeError("llvm-install-name-tool is required to normalize macOS dylibs")
+
+
+def normalize_macos_dylib(path: Path) -> None:
+    """Sets the dylib install name so consumers can resolve it through rpath."""
+    subprocess.run(
+        [install_name_tool(), "-id", MACOS_DYLIB_ID, str(path)],
+        check=True,
+    )
+
+
 def first_existing(root: Path, names: tuple[str, ...]) -> Path | None:
     for name in names:
         matches = sorted(root.rglob(name))
@@ -199,6 +227,8 @@ def stage_platform_sdk(
         for src in sorted(extract_dir.rglob(pattern)):
             dst = lib_dir / src.name
             if copy_file(src, dst, force):
+                if platform.startswith("darwin-") and dst.name == "libimpeller.dylib":
+                    normalize_macos_dylib(dst)
                 copied.append(dst)
 
     return copied
