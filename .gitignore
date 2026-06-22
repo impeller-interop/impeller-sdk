@@ -8,3 +8,4 @@ tools/impeller_*/
 
 __pycache__/
 *.pyc
+.DS_Store
