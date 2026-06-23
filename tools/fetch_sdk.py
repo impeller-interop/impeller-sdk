@@ -133,6 +133,15 @@ def copy_file(src: Path, dst: Path, force: bool) -> bool:
     return True
 
 
+def copy_header(src: Path, dst: Path, force: bool) -> bool:
+    if dst.exists() and not force:
+        return False
+    dst.parent.mkdir(parents=True, exist_ok=True)
+    data = src.read_bytes().replace(b"\r\n", b"\n").replace(b"\r", b"\n")
+    dst.write_bytes(data)
+    return True
+
+
 def install_name_tool() -> str:
     """Finds a Mach-O install-name editor. Raises if none is available."""
     for name in (
@@ -203,7 +212,7 @@ def stage_platform_sdk(
 
     copied: list[Path] = []
     header = first_existing(extract_dir, ("impeller.h",))
-    if header and copy_file(header, sdk_root / "include" / "impeller.h", force):
+    if header and copy_header(header, sdk_root / "include" / "impeller.h", force):
         copied.append(sdk_root / "include" / "impeller.h")
 
     readme = first_existing(extract_dir, ("README.md",))
