@@ -159,10 +159,32 @@ def install_name_tool() -> str:
     raise RuntimeError("llvm-install-name-tool is required to normalize macOS dylibs")
 
 
+def llvm_strip_tool() -> str:
+    for name in (
+        "llvm-strip",
+        "llvm-strip-20",
+        "llvm-strip-19",
+        "llvm-strip-18",
+        "llvm-strip-17",
+        "llvm-strip-16",
+    ):
+        path = shutil.which(name)
+        if path:
+            return path
+    raise RuntimeError("llvm-strip is required to strip macOS dylibs")
+
+
 def normalize_macos_dylib(path: Path) -> None:
     """Sets the dylib install name so consumers can resolve it through rpath."""
     subprocess.run(
         [install_name_tool(), "-id", MACOS_DYLIB_ID, str(path)],
+        check=True,
+    )
+
+
+def strip_macos_dylib(path: Path) -> None:
+    subprocess.run(
+        [llvm_strip_tool(), "-x", str(path)],
         check=True,
     )
 
@@ -238,6 +260,7 @@ def stage_platform_sdk(
             if copy_file(src, dst, force):
                 if platform.startswith("darwin-") and dst.name == "libimpeller.dylib":
                     normalize_macos_dylib(dst)
+                    strip_macos_dylib(dst)
                 copied.append(dst)
 
     return copied

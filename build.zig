@@ -42,7 +42,6 @@ fn addModule(b: *std.Build, options: BuildOptions, sdk: ?ImpellerSdk) *std.Build
 
     if (sdk) |resolved_sdk| {
         mod.addIncludePath(resolved_sdk.include_path);
-        mod.addRPath(resolved_sdk.lib_path);
         linkImpeller(mod, resolved_sdk, options.target.result);
     }
 
@@ -95,7 +94,8 @@ fn linkImpeller(module: *std.Build.Module, sdk: ImpellerSdk, target: std.Target)
     if (target.os.tag == .windows) {
         module.addObjectFile(sdk.import_library.?);
     } else {
-        module.addObjectFile(sdk.library);
+        module.addLibraryPath(sdk.lib_path);
+        module.linkSystemLibrary("impeller", .{});
     }
 }
 
