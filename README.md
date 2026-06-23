@@ -25,19 +25,26 @@ Other bindings can use the Release assets or `sdk/` directly. Zig wrappers live 
 
 ## Zig Usage
 
+This package exports SDK paths for Zig packages that build bindings:
+
 ```zig
 const sdk_dep = b.dependency("impeller_sdk", .{
     .target = target,
-    .optimize = optimize,
 });
 
-const impeller_artifact = sdk_dep.artifact("impeller");
-exe.root_module.linkLibrary(impeller_artifact);
+const header = sdk_dep.namedLazyPath("impeller_header");
+const include_dir = sdk_dep.namedLazyPath("impeller_include");
+const lib_dir = sdk_dep.namedLazyPath("impeller_lib_dir");
+const runtime_library = sdk_dep.namedLazyPath("impeller_library");
 ```
+
+On Windows, `impeller_import_library` is also exported for linking.
 
 Only the required platform archive is downloaded.
 
 The repository `sdk/` directory is not included in Zig package fetches.
+
+Application-level Zig bindings and build helpers live in [`impeller-zig`](https://github.com/impeller-interop/impeller-zig).
 
 ## Package SDK Assets
 
