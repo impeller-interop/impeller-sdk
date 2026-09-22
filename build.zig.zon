@@ -6,33 +6,33 @@
     .dependencies = .{
         // BEGIN GENERATED IMPELLER SDK DEPS
         .impeller_sdk_macos_arm64 = .{
-            .url = "https://github.com/impeller-interop/impeller-sdk/releases/download/beta-sdk-e2149387/impeller-sdk-macos-arm64.tar.gz",
-            .hash = "impeller_sdk_macos_arm64-0.1.0-bDpXC4aTgwBomqTL4A1v8XGw2ENxkLOmB-dvtxY3WZjb",
+            .url = "https://github.com/impeller-interop/impeller-sdk/releases/download/beta-sdk-774a7673/impeller-sdk-macos-arm64.tar.gz",
+            .hash = "impeller_sdk_macos_arm64-0.1.0-JicjvxYYhQAkZXkccYt5mMmYcal9xoI1kMYR0fy2MmH5",
             .lazy = true,
         },
         .impeller_sdk_macos_x64 = .{
-            .url = "https://github.com/impeller-interop/impeller-sdk/releases/download/beta-sdk-e2149387/impeller-sdk-macos-x64.tar.gz",
-            .hash = "impeller_sdk_macos_x64-0.1.0-ahMgrHxMhQAlKzbx5bmy6IIZV8KZhi0d_YPSaofEqBen",
+            .url = "https://github.com/impeller-interop/impeller-sdk/releases/download/beta-sdk-774a7673/impeller-sdk-macos-x64.tar.gz",
+            .hash = "impeller_sdk_macos_x64-0.1.0-NGkP1NT9hQDeOSgRV91YJewjHAxP97wmZiKBlc6Uphzg",
             .lazy = true,
         },
         .impeller_sdk_linux_arm64 = .{
-            .url = "https://github.com/impeller-interop/impeller-sdk/releases/download/beta-sdk-e2149387/impeller-sdk-linux-arm64.tar.gz",
-            .hash = "impeller_sdk_linux_arm64-0.1.0-OIR7yNZPgACSV7PQz5XHDoMSfJL8Ae4nvFIa5QBdxEeu",
+            .url = "https://github.com/impeller-interop/impeller-sdk/releases/download/beta-sdk-774a7673/impeller-sdk-linux-arm64.tar.gz",
+            .hash = "impeller_sdk_linux_arm64-0.1.0-BvJtoC5IgQBnHCVxsCMWq2Zl-Vl0xaTAwHnzkK_-x58D",
             .lazy = true,
         },
         .impeller_sdk_linux_x64 = .{
-            .url = "https://github.com/impeller-interop/impeller-sdk/releases/download/beta-sdk-e2149387/impeller-sdk-linux-x64.tar.gz",
-            .hash = "impeller_sdk_linux_x64-0.1.0-BNX62pSjhwCHS8SFU328GClJE_PO4szenWv1pm5uugdI",
+            .url = "https://github.com/impeller-interop/impeller-sdk/releases/download/beta-sdk-774a7673/impeller-sdk-linux-x64.tar.gz",
+            .hash = "impeller_sdk_linux_x64-0.1.0-PuAvdaQZiADwhsmXAFa9kMZRSUTgYBHh4E-vdXfZi6pn",
             .lazy = true,
         },
         .impeller_sdk_windows_arm64 = .{
-            .url = "https://github.com/impeller-interop/impeller-sdk/releases/download/beta-sdk-e2149387/impeller-sdk-windows-arm64.tar.gz",
-            .hash = "impeller_sdk_windows_arm64-0.1.0-wVlTrO_paQCu8m1_tXtdCQk0kqX-a_9fom5UPtS2Db3s",
+            .url = "https://github.com/impeller-interop/impeller-sdk/releases/download/beta-sdk-774a7673/impeller-sdk-windows-arm64.tar.gz",
+            .hash = "impeller_sdk_windows_arm64-0.1.0-Q2pfwO_dagDz3Nu7sBbjw13zJ4pZNTQ7sInEIGPUoHy1",
             .lazy = true,
         },
         .impeller_sdk_windows_x64 = .{
-            .url = "https://github.com/impeller-interop/impeller-sdk/releases/download/beta-sdk-e2149387/impeller-sdk-windows-x64.tar.gz",
-            .hash = "impeller_sdk_windows_x64-0.1.0-fBVB_e3bagAaUwlsFPr-5U_CNZMQA3-obIWkw8iSCUsG",
+            .url = "https://github.com/impeller-interop/impeller-sdk/releases/download/beta-sdk-774a7673/impeller-sdk-windows-x64.tar.gz",
+            .hash = "impeller_sdk_windows_x64-0.1.0-OEZ3Pu1HawDECvrxGa4N15ZONYmM0Bgj8hHJIj9Fgxe7",
             .lazy = true,
         },
         // END GENERATED IMPELLER SDK DEPS
