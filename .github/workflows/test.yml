@@ -31,13 +31,43 @@ jobs:
       - name: Build and run native test
         uses: ./.github/actions/native-test
 
+  sanitizer:
+    name: Sanitizer (${{ matrix.platform }})
+    runs-on: ${{ matrix.runs_on }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: linux x64
+            runs_on: ubuntu-latest
+          - platform: linux arm64
+            runs_on: ubuntu-24.04-arm
+          - platform: macOS x64
+            runs_on: macos-15-intel
+          - platform: macOS arm64
+            runs_on: macos-latest
+          - platform: windows x64
+            runs_on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build and run with ASan/LSan
+        uses: ./.github/actions/native-test
+        with:
+          asan: "true"
+
   required:
     name: Native C test
-    needs: native
+    needs:
+      - native
+      - sanitizer
     if: always()
     runs-on: ubuntu-latest
     steps:
-      - name: Require every platform
+      - name: Require every check
         env:
-          RESULT: ${{ needs.native.result }}
-        run: test "$RESULT" = "success"
+          NATIVE: ${{ needs.native.result }}
+          SANITIZER: ${{ needs.sanitizer.result }}
+        run: |
+          test "$NATIVE" = "success"
+          test "$SANITIZER" = "success"

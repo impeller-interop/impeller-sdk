@@ -70,5 +70,30 @@ add_custom_command(TARGET impeller_native_test POST_BUILD
   VERBATIM
 )
 
+option(IMPELLER_SDK_ASAN "Build the native test with ASan and LSan" OFF)
+if(IMPELLER_SDK_ASAN)
+  if(MSVC)
+    target_compile_options(impeller_native_test PRIVATE /fsanitize=address)
+  else()
+    target_compile_options(impeller_native_test PRIVATE
+      -fsanitize=address
+      -fno-omit-frame-pointer
+    )
+    target_link_options(impeller_native_test PRIVATE -fsanitize=address)
+  endif()
+endif()
+
 enable_testing()
 add_test(NAME native COMMAND impeller_native_test)
+
+if(IMPELLER_SDK_ASAN)
+  if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    set_tests_properties(native PROPERTIES
+      ENVIRONMENT "ASAN_OPTIONS=detect_leaks=1:halt_on_error=1"
+    )
+  else()
+    set_tests_properties(native PROPERTIES
+      ENVIRONMENT "ASAN_OPTIONS=halt_on_error=1"
+    )
+  endif()
+endif()

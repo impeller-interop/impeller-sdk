@@ -44,12 +44,11 @@ Only the required platform archive is downloaded.
 
 The repository `sdk/` directory is not included in Zig package fetches.
 
-Application-level Zig bindings and build helpers live in [`impeller-zig`](https://github.com/impeller-interop/impeller-zig).
-
 ## Native C Test
 
-`tests/CMakeLists.txt` builds `tests/native.c` against the committed SDK for the
-host platform and copies the runtime beside the test binary. Run it locally with:
+`tests/` builds `tests/native.c` against the host platform's SDK and copies the
+runtime beside the test binary. It covers version, paint, gradients, filters,
+paths, and display lists without a GPU context.
 
 ```bash
 cmake -S tests -B build
@@ -57,7 +56,9 @@ cmake --build build --config Debug
 ctest --test-dir build -C Debug --output-on-failure
 ```
 
-CI runs the same project on Linux, macOS, and Windows for x64 and arm64.
+CI runs this on Linux, macOS, and Windows for x64 and arm64, plus an ASan build
+(`-DIMPELLER_SDK_ASAN=ON`) on Linux, macOS, and Windows x64. Leak detection is
+enabled on Linux only.
 
 ## Package SDK Assets
 

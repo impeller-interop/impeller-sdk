@@ -1,12 +1,19 @@
 name: Native C test
-description: Build and run the native C test
+description: Build and run the native C test against the committed SDK artifacts
+
+inputs:
+  asan:
+    description: Build with AddressSanitizer and LeakSanitizer
+    default: "false"
 
 runs:
   using: composite
   steps:
     - name: Configure
       shell: bash
-      run: cmake -S tests -B build -DCMAKE_BUILD_TYPE=Debug
+      run: >
+        cmake -S tests -B build -DCMAKE_BUILD_TYPE=Debug
+        -DIMPELLER_SDK_ASAN=${{ inputs.asan == 'true' && 'ON' || 'OFF' }}
 
     - name: Build
       shell: bash
