@@ -1,37 +1,36 @@
 # impeller-sdk
 
-Packaged standalone Impeller SDK artifacts from Flutter.
+Standalone Impeller SDK artifacts for the `impeller.h` C API.
 
-This repo normalizes the SDK layout and publishes it in two forms:
+Zig bindings and build helpers live in [`impeller-zig`](https://github.com/impeller-interop/impeller-zig).
 
-- `sdk/`: combined SDK tree in the repository, useful for browsing or direct use.
-- GitHub Releases: per-platform archives for package managers and CI.
+## Zig support
 
-Repository `sdk/` layout:
+[![Zig version support](https://zig-support.dkx215417.workers.dev/master/0.17.0/0.16.0/0.15.2/0.15.1/badge.svg)](https://ziglang.org/download/)
+
+## Install
+
+```bash
+zig fetch --save git+https://github.com/impeller-interop/impeller-sdk#v0.2.0
+```
+
+Only the archive for the selected target is downloaded.
+
+## Layout
+
+Repository `sdk/`:
 
 - `include/impeller.h`
 - `lib/<os>/<arch>/...`
-- upstream SDK README / license when available
+- upstream README and license when available
 
-Release archive layout:
+Release archives:
 
 - `include/impeller.h`
 - `lib/...`
 - Zig package metadata
 
-Zig metadata is included only for lazy package consumption.
-
-Other bindings can use the Release assets or `sdk/` directly. Zig wrappers live in [`impeller-zig`](https://github.com/impeller-interop/impeller-zig).
-
-## Branches
-
-`main` is the only maintained branch. It carries the tooling, tests, and the
-committed stable `sdk/` snapshot. Beta and stable SDK builds are both published
-as Release assets; beta is never committed to the repository.
-
-## Zig Usage
-
-This package exports SDK paths for Zig packages that build bindings:
+## Zig usage
 
 ```zig
 const sdk_dep = b.dependency("impeller_sdk", .{
@@ -44,34 +43,40 @@ const lib_dir = sdk_dep.namedLazyPath("impeller_lib_dir");
 const runtime_library = sdk_dep.namedLazyPath("impeller_library");
 ```
 
-On Windows, `impeller_import_library` is also exported for linking.
-
-Only the required platform archive is downloaded.
+On Windows, `impeller_import_library` is exported for linking.
 
 The repository `sdk/` directory is not included in Zig package fetches.
 
-## Native C Test
+## Channels
 
-`tests/` builds `tests/native.c` against the host platform's SDK and copies the
-runtime beside the test binary. It covers version, paint, gradients, filters,
-paths, and display lists without a GPU context.
+Stable SDK artifacts are committed to `sdk/` and pinned by `build.zig.zon`.
+Beta artifacts are published as Release assets only; the repository is never
+updated for beta.
 
-```bash
-cmake -S tests -B build
-cmake --build build --config Debug
-ctest --test-dir build -C Debug --output-on-failure
-```
+Each successful stable update bumps the patch version in `build.zig.zon`
+automatically. Minor versions are changed by hand.
 
-CI runs this on Linux, macOS, and Windows for x64 and arm64, plus an ASan build
-(`-DIMPELLER_SDK_ASAN=ON`) on Linux and macOS. Leak detection is enabled on Linux
-only.
+## Native C test
 
-## Package SDK Assets
+`tests/` compiles `tests/native.c` against the host SDK and runs it under CTest,
+covering version, paint, gradients, filters, paths, and display lists without a
+GPU context. CI runs it on every supported platform, with ASan on Linux and
+macOS.
 
-Run manually:
+## Developer tools
 
 ```bash
-python3 tools/package_sdk.py --out dist --sdk sdk --zon build.zig.zon
+python3 tools/fetch_sdk.py --channel stable   # download raw Flutter archives
+python3 tools/package_sdk.py --channel stable --out dist   # build archives
 ```
 
-CI also runs daily and updates `sdk/`, `build.zig.zon`, and Release assets when Flutter publishes a new SDK.
+`fetch_sdk.py` writes to `tools/impeller_<sha8>`. Pass `--sdk sdk` and
+`--zon build.zig.zon` to `package_sdk.py` to refresh the committed tree and
+dependency entries.
+
+## LICENSE
+
+[MIT](LICENSE).
+
+The bundled SDK artifacts use the Flutter license, see
+[`sdk/LICENSE.sdk.md`](sdk/LICENSE.sdk.md).
