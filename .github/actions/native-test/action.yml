@@ -1,19 +1,34 @@
 name: Native C test
-description: Build and run the native C test against the committed SDK artifacts
+description: Build and run the native C test against Impeller SDK artifacts
 
 inputs:
   asan:
     description: Build with AddressSanitizer and LeakSanitizer
     default: "false"
+  sdk_root:
+    description: SDK root containing include/ and lib/ (defaults to the repository sdk/)
+    default: ""
 
 runs:
   using: composite
   steps:
     - name: Configure
       shell: bash
-      run: >
-        cmake -S tests -B build -DCMAKE_BUILD_TYPE=Debug
-        -DIMPELLER_SDK_ASAN=${{ inputs.asan == 'true' && 'ON' || 'OFF' }}
+      env:
+        ASAN: ${{ inputs.asan }}
+        SDK_ROOT: ${{ inputs.sdk_root }}
+      run: |
+        set -euo pipefail
+
+        args=(-DCMAKE_BUILD_TYPE=Debug)
+        if [ "$ASAN" = "true" ]; then
+          args+=(-DIMPELLER_SDK_ASAN=ON)
+        fi
+        if [ -n "$SDK_ROOT" ]; then
+          args+=(-DIMPELLER_SDK_ROOT="$SDK_ROOT")
+        fi
+
+        cmake -S tests -B build "${args[@]}"
 
     - name: Build
       shell: bash

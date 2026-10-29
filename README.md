@@ -23,6 +23,12 @@ Zig metadata is included only for lazy package consumption.
 
 Other bindings can use the Release assets or `sdk/` directly. Zig wrappers live in [`impeller-zig`](https://github.com/impeller-interop/impeller-zig).
 
+## Branches
+
+`main` is the only maintained branch. It carries the tooling, tests, and the
+committed stable `sdk/` snapshot. Beta and stable SDK builds are both published
+as Release assets; beta is never committed to the repository.
+
 ## Zig Usage
 
 This package exports SDK paths for Zig packages that build bindings:

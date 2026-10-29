@@ -22,8 +22,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: stable
 
       - uses: mlugg/setup-zig@v2
         with:
@@ -85,14 +83,14 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git commit -m "chore(sdk): update stable SDK"
-          git push origin HEAD:stable
+          git push origin HEAD:main
 
       - name: Publish SDK assets
         if: ${{ steps.package.outputs.skipped != 'true' && steps.changes.outputs.changed == 'true' }}
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.package.outputs.release_tag }}
-          target_commitish: stable
+          target_commitish: main
           files: |
             dist/*.tar.gz
             dist/lazy-deps.zigzon
@@ -100,5 +98,5 @@ jobs:
           body: |
             Generated stable Impeller SDK packages for engine `${{ steps.package.outputs.engine_sha }}`.
 
-            The `sdk/` directory in `stable` contains the combined SDK tree.
+            The `sdk/` directory in `main` contains the combined SDK tree.
             `lazy-deps.zigzon` contains the dependency entries generated for `build.zig.zon`.

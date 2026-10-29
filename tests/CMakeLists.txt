@@ -5,7 +5,9 @@ set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_C_EXTENSIONS OFF)
 
-get_filename_component(sdk_root "${CMAKE_CURRENT_LIST_DIR}/../sdk" ABSOLUTE)
+set(IMPELLER_SDK_ROOT "${CMAKE_CURRENT_LIST_DIR}/../sdk"
+    CACHE PATH "SDK root containing include/ and lib/")
+get_filename_component(sdk_root "${IMPELLER_SDK_ROOT}" ABSOLUTE)
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
   set(sdk_os "windows")
@@ -28,6 +30,13 @@ endif()
 
 set(sdk_include_dir "${sdk_root}/include")
 set(sdk_lib_dir "${sdk_root}/lib/${sdk_os}/${sdk_arch}")
+if(NOT EXISTS "${sdk_lib_dir}")
+  set(sdk_lib_dir "${sdk_root}/lib")
+endif()
+
+if(NOT EXISTS "${sdk_include_dir}")
+  message(FATAL_ERROR "missing SDK include directory: ${sdk_include_dir}")
+endif()
 
 if(NOT EXISTS "${sdk_lib_dir}")
   message(FATAL_ERROR "missing SDK library directory: ${sdk_lib_dir}")
