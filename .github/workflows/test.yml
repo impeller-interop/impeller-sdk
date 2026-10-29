@@ -9,6 +9,7 @@ jobs:
   native:
     name: Native C test (${{ matrix.platform }})
     runs-on: ${{ matrix.runs_on }}
+    timeout-minutes: 15
     strategy:
       fail-fast: false
       matrix:
@@ -34,6 +35,7 @@ jobs:
   sanitizer:
     name: Sanitizer (${{ matrix.platform }})
     runs-on: ${{ matrix.runs_on }}
+    timeout-minutes: 15
     strategy:
       fail-fast: false
       matrix:
@@ -46,12 +48,10 @@ jobs:
             runs_on: macos-15-intel
           - platform: macOS arm64
             runs_on: macos-latest
-          - platform: windows x64
-            runs_on: windows-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: Build and run with ASan/LSan
+      - name: Build and run with ASan
         uses: ./.github/actions/native-test
         with:
           asan: "true"

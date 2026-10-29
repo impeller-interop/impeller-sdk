@@ -57,8 +57,8 @@ ctest --test-dir build -C Debug --output-on-failure
 ```
 
 CI runs this on Linux, macOS, and Windows for x64 and arm64, plus an ASan build
-(`-DIMPELLER_SDK_ASAN=ON`) on Linux, macOS, and Windows x64. Leak detection is
-enabled on Linux only.
+(`-DIMPELLER_SDK_ASAN=ON`) on Linux and macOS. Leak detection is enabled on Linux
+only.
 
 ## Package SDK Assets
 

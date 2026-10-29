@@ -21,4 +21,4 @@ runs:
 
     - name: Test
       shell: bash
-      run: ctest --test-dir build -C Debug --output-on-failure
+      run: ctest --test-dir build -C Debug --timeout 120 --output-on-failure
