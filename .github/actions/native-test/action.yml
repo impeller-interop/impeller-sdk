@@ -1,0 +1,17 @@
+name: Native C test
+description: Build and run the native C test
+
+runs:
+  using: composite
+  steps:
+    - name: Configure
+      shell: bash
+      run: cmake -S tests -B build -DCMAKE_BUILD_TYPE=Debug
+
+    - name: Build
+      shell: bash
+      run: cmake --build build --config Debug
+
+    - name: Test
+      shell: bash
+      run: ctest --test-dir build -C Debug --output-on-failure

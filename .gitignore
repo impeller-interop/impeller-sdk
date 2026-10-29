@@ -3,6 +3,8 @@ zig-cache/
 zig-out/
 zig-pkg/
 
+.cache/
+build/
 dist/
 tools/impeller_*/
 

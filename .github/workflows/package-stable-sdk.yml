@@ -57,6 +57,9 @@ jobs:
 
           python3 tools/package_sdk.py "${args[@]}"
 
+      - name: Run native C test before commit
+        uses: ./.github/actions/native-test
+
       - name: Check for SDK changes
         if: ${{ steps.package.outputs.skipped != 'true' }}
         id: changes

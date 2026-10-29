@@ -46,6 +46,19 @@ The repository `sdk/` directory is not included in Zig package fetches.
 
 Application-level Zig bindings and build helpers live in [`impeller-zig`](https://github.com/impeller-interop/impeller-zig).
 
+## Native C Test
+
+`tests/CMakeLists.txt` builds `tests/native.c` against the committed SDK for the
+host platform and copies the runtime beside the test binary. Run it locally with:
+
+```bash
+cmake -S tests -B build
+cmake --build build --config Debug
+ctest --test-dir build -C Debug --output-on-failure
+```
+
+CI runs the same project on Linux, macOS, and Windows for x64 and arm64.
+
 ## Package SDK Assets
 
 Run manually:
