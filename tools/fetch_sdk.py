@@ -14,7 +14,6 @@ import urllib.request
 import zipfile
 from pathlib import Path
 
-
 DEFAULT_PLATFORMS = (
     "darwin-arm64",
     "darwin-x64",
@@ -50,7 +49,7 @@ def latest_release(channel: str, releases_url: str) -> dict[str, object]:
     data = read_json(releases_url)
     current_release = data.get("current_release")
     if not isinstance(current_release, dict):
-        raise RuntimeError(f"{releases_url} does not contain current_release metadata")
+        raise TypeError(f"{releases_url} does not contain current_release metadata")
 
     framework_sha = current_release.get(channel)
     if not isinstance(framework_sha, str) or not framework_sha:
@@ -58,7 +57,7 @@ def latest_release(channel: str, releases_url: str) -> dict[str, object]:
 
     releases = data.get("releases")
     if not isinstance(releases, list):
-        raise RuntimeError(f"{releases_url} does not contain release entries")
+        raise TypeError(f"{releases_url} does not contain release entries")
 
     for release in releases:
         if not isinstance(release, dict):
@@ -103,13 +102,15 @@ def artifact_exists(url: str) -> bool:
 
 def download_file(url: str, output: Path) -> None:
     output.parent.mkdir(parents=True, exist_ok=True)
-    with urllib.request.urlopen(url, timeout=120) as response:
-        with output.open("wb") as file:
-            while True:
-                chunk = response.read(1024 * 1024)
-                if not chunk:
-                    break
-                file.write(chunk)
+    with (
+        urllib.request.urlopen(url, timeout=120) as response,
+        output.open("wb") as file,
+    ):
+        while True:
+            chunk = response.read(1024 * 1024)
+            if not chunk:
+                break
+            file.write(chunk)
 
 
 def safe_extract_zip(zip_path: Path, destination: Path) -> None:
@@ -392,6 +393,6 @@ if __name__ == "__main__":
         raise SystemExit(main())
     except KeyboardInterrupt:
         raise SystemExit(130)
-    except Exception as error:
+    except Exception as error:  # noqa: BLE001 - top-level CLI error boundary
         print(f"error: {error}", file=sys.stderr)
         raise SystemExit(1)

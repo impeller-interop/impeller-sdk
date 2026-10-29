@@ -17,7 +17,6 @@ from typing import Any
 
 import fetch_sdk
 
-
 SDK_DEPS_START = "        // BEGIN GENERATED IMPELLER SDK DEPS"
 SDK_DEPS_END = "        // END GENERATED IMPELLER SDK DEPS"
 DEFAULT_VERSION = "0.1.0"
@@ -74,22 +73,20 @@ def normalize_tar_member(member: tarfile.TarInfo) -> tarfile.TarInfo:
 
 def create_tarball(package_root: Path, package_name: str, output: Path) -> None:
     output.parent.mkdir(parents=True, exist_ok=True)
-    with output.open("wb") as file:
-        with gzip.GzipFile(filename="", mode="wb", fileobj=file, mtime=0) as gzip_file:
-            with tarfile.open(
-                fileobj=gzip_file, mode="w", format=tarfile.PAX_FORMAT
-            ) as archive:
-                archive.add(
-                    package_root, arcname=package_name, filter=normalize_tar_member
-                )
+    with (
+        output.open("wb") as file,
+        gzip.GzipFile(filename="", mode="wb", fileobj=file, mtime=0) as gzip_file,
+        tarfile.open(fileobj=gzip_file, mode="w", format=tarfile.PAX_FORMAT) as archive,
+    ):
+        archive.add(package_root, arcname=package_name, filter=normalize_tar_member)
 
 
 def zig_fetch_hash(zig: str, tarball: Path) -> str:
     result = subprocess.run(
         [zig, "fetch", str(tarball)],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
+        capture_output=True,
         text=True,
+        check=False,
     )
     if result.returncode != 0:
         raise RuntimeError(
@@ -104,9 +101,9 @@ def zig_fetch_hash(zig: str, tarball: Path) -> str:
 def suggested_fingerprint(zig: str, tarball: Path) -> str | None:
     result = subprocess.run(
         [zig, "fetch", str(tarball)],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
+        capture_output=True,
         text=True,
+        check=False,
     )
     output = result.stdout + result.stderr
     match = re.search(r"suggested value: (0x[0-9a-fA-F]+)", output)
@@ -178,9 +175,7 @@ def resolve_engine_sha(
     release = fetch_sdk.latest_release(channel, fetch_sdk.DEFAULT_RELEASES_URL)
     framework_sha_value = release.get("hash")
     if not isinstance(framework_sha_value, str):
-        raise RuntimeError(
-            f"latest {channel} release does not contain a framework hash"
-        )
+        raise TypeError(f"latest {channel} release does not contain a framework hash")
     engine_sha = fetch_sdk.engine_hash_for_flutter(
         framework_sha_value, fetch_sdk.DEFAULT_FLUTTER_REPO_RAW_URL
     )
@@ -228,6 +223,9 @@ def package_platform(
             True,
             temp_root / "sdk",
         )
+    zip_path.unlink(missing_ok=True)
+    fetch_sdk.remove_tree(temp_root / platform)
+    fetch_sdk.remove_tree(temp_root / "sdk" / platform)
     write_package_zon(package_root, dep_name, DEFAULT_VERSION, None)
     create_tarball(package_root, dep_name, tarball)
     fingerprint = suggested_fingerprint(DEFAULT_ZIG, tarball)
@@ -235,6 +233,7 @@ def package_platform(
         write_package_zon(package_root, dep_name, DEFAULT_VERSION, fingerprint)
         create_tarball(package_root, dep_name, tarball)
     package_hash = zig_fetch_hash(DEFAULT_ZIG, tarball)
+    fetch_sdk.remove_tree(package_root)
     print("OK")
 
     return {
@@ -389,6 +388,6 @@ if __name__ == "__main__":
         raise SystemExit(main())
     except KeyboardInterrupt:
         raise SystemExit(130)
-    except Exception as error:
+    except Exception as error:  # noqa: BLE001 - top-level CLI error boundary
         print(f"error: {error}", file=sys.stderr)
         raise SystemExit(1)
