@@ -46,6 +46,7 @@ jobs:
             --out dist
             --sdk sdk
             --zon build.zig.zon
+            --bump-patch
             --skip-release
           )
 
@@ -65,7 +66,7 @@ jobs:
         run: |
           set -euo pipefail
 
-          git add build.zig.zon sdk
+          git add build.zig.zon README.md sdk
           if git diff --cached --quiet; then
             echo "changed=false" >> "$GITHUB_OUTPUT"
             echo "No SDK changes."
@@ -83,7 +84,14 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git commit -m "chore(sdk): update stable SDK"
-          git push origin HEAD:main
+
+          version="$(grep -oP '^\s*\.version = "\K[^"]+' build.zig.zon | head -1)"
+          refspecs=(HEAD:main)
+          if ! git rev-parse -q --verify "refs/tags/v$version" >/dev/null; then
+            git tag -a "v$version" -m "v$version"
+            refspecs+=("refs/tags/v$version")
+          fi
+          git push origin "${refspecs[@]}"
 
       - name: Publish SDK assets
         if: ${{ steps.package.outputs.skipped != 'true' && steps.changes.outputs.changed == 'true' }}

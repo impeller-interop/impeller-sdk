@@ -19,7 +19,6 @@ import fetch_sdk
 
 SDK_DEPS_START = "        // BEGIN GENERATED IMPELLER SDK DEPS"
 SDK_DEPS_END = "        // END GENERATED IMPELLER SDK DEPS"
-DEFAULT_VERSION = "0.1.0"
 DEFAULT_ZIG = "zig"
 DEFAULT_RELEASE_REPOSITORY = "impeller-interop/impeller-sdk"
 PLATFORM_DEP_NAMES = {
@@ -38,6 +37,52 @@ PLATFORM_ASSET_NAMES = {
     "windows-arm64": "impeller-sdk-windows-arm64.tar.gz",
     "windows-x64": "impeller-sdk-windows-x64.tar.gz",
 }
+
+
+def zon_version(path: Path) -> str:
+    """Read the package version from a build.zig.zon file."""
+    text = path.read_text(encoding="utf-8")
+    match = re.search(r'(?m)^\s*\.version\s*=\s*"([^"]+)"', text)
+    if not match:
+        raise RuntimeError(f"{path} does not declare a .version")
+    return match.group(1)
+
+
+def bump_patch(version: str) -> str:
+    """Increment the patch component of a numeric version."""
+    match = re.fullmatch(r"(\d+)\.(\d+)\.(\d+)", version)
+    if not match:
+        raise RuntimeError(f"cannot bump non-numeric version: {version}")
+    major, minor, patch = match.groups()
+    return f"{major}.{minor}.{int(patch) + 1}"
+
+
+def write_zon_version(path: Path, version: str) -> None:
+    """Replace the package version in a build.zig.zon file."""
+    text = path.read_text(encoding="utf-8")
+    updated, count = re.subn(
+        r'(?m)^(\s*\.version\s*=\s*)"[^"]+"',
+        rf'\g<1>"{version}"',
+        text,
+        count=1,
+    )
+    if count != 1:
+        raise RuntimeError(f"{path} does not declare a .version")
+    path.write_text(updated, encoding="utf-8")
+
+
+def write_readme_version(path: Path, version: str) -> None:
+    """Point the README install command at the given version tag."""
+    text = path.read_text(encoding="utf-8")
+    updated, count = re.subn(
+        r"(impeller-sdk#)[^\s`)]+",
+        rf"\g<1>v{version}",
+        text,
+        count=1,
+    )
+    if count != 1:
+        raise RuntimeError(f"{path} does not contain an impeller-sdk install ref")
+    path.write_text(updated, encoding="utf-8")
 
 
 def write_package_zon(
@@ -226,11 +271,11 @@ def package_platform(
     zip_path.unlink(missing_ok=True)
     fetch_sdk.remove_tree(temp_root / platform)
     fetch_sdk.remove_tree(temp_root / "sdk" / platform)
-    write_package_zon(package_root, dep_name, DEFAULT_VERSION, None)
+    write_package_zon(package_root, dep_name, args.version, None)
     create_tarball(package_root, dep_name, tarball)
     fingerprint = suggested_fingerprint(DEFAULT_ZIG, tarball)
     if fingerprint:
-        write_package_zon(package_root, dep_name, DEFAULT_VERSION, fingerprint)
+        write_package_zon(package_root, dep_name, args.version, fingerprint)
         create_tarball(package_root, dep_name, tarball)
     package_hash = zig_fetch_hash(DEFAULT_ZIG, tarball)
     fetch_sdk.remove_tree(package_root)
@@ -281,6 +326,20 @@ def main() -> int:
         action="store_true",
         help="Exit early when the resolved GitHub Release asset already exists.",
     )
+    parser.add_argument(
+        "--version",
+        help="Package version. Defaults to the .version field in build.zig.zon.",
+    )
+    parser.add_argument(
+        "--bump-patch",
+        action="store_true",
+        help="Increment the patch version before packaging. Requires --zon.",
+    )
+    parser.add_argument(
+        "--readme",
+        type=Path,
+        help="README whose install reference is bumped. Defaults to the repository README.md.",
+    )
     args = parser.parse_args()
 
     engine_sha, release, framework_sha = resolve_engine_sha(args.channel, args.sha)
@@ -307,6 +366,18 @@ def main() -> int:
             )
         return 0
 
+    zon_path = args.update_zon or (
+        Path(__file__).resolve().parent.parent / "build.zig.zon"
+    )
+    if args.bump_patch and args.version:
+        raise RuntimeError("--bump-patch cannot be combined with --version")
+    if args.bump_patch and not args.update_zon:
+        raise RuntimeError("--bump-patch requires --zon")
+    version = args.version or zon_version(zon_path)
+    if args.bump_patch:
+        version = bump_patch(version)
+    args.version = version
+
     args.out_dir.mkdir(parents=True, exist_ok=True)
     if args.sdk_dir:
         fetch_sdk.reset_staged_sdk(args.sdk_dir)
@@ -314,14 +385,15 @@ def main() -> int:
 
     print(f"Packaging Impeller SDK for Flutter engine SHA: {engine_sha}")
     if release:
-        version = release.get("version")
+        flutter_version = release.get("version")
         release_date = release.get("release_date")
-        if isinstance(version, str):
-            print(f"Flutter {args.channel}: {version}")
+        if isinstance(flutter_version, str):
+            print(f"Flutter {args.channel}: {flutter_version}")
         if isinstance(release_date, str):
             print(f"Release date: {release_date}")
         print(f"Flutter framework SHA: {framework_sha}")
     print(f"Release tag: {release_tag}")
+    print(f"Package version: {args.version}")
     print(f"Output directory: {args.out_dir}")
     if args.sdk_dir:
         print(f"SDK directory: {args.sdk_dir}")
@@ -360,6 +432,13 @@ def main() -> int:
 
     if args.update_zon:
         update_zon(args.update_zon, snippet)
+    if args.bump_patch:
+        write_zon_version(args.update_zon, args.version)
+        write_readme_version(
+            args.readme or (Path(__file__).resolve().parent.parent / "README.md"),
+            args.version,
+        )
+        print(f"Bumped {args.update_zon} to {args.version}")
 
     if github_output:
         write_github_output(
