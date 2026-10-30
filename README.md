@@ -11,7 +11,7 @@ Zig bindings and build helpers live in [`impeller-zig`](https://github.com/impel
 ## Install
 
 ```bash
-zig fetch --save git+https://github.com/impeller-interop/impeller-sdk#v0.2.0
+zig fetch --save git+https://github.com/impeller-interop/impeller-sdk#v0.2.1
 ```
 
 Only the archive for the selected target is downloaded.
